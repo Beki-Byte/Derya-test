@@ -12,12 +12,7 @@
     height: calc(100vh - var(--header-h, 76px));
     height: calc(100svh - var(--header-h, 76px));
     overflow: hidden; isolation: isolate;
-    background: #e9dccb;
-}
-/* Hintergrund: dasselbe Bild unscharf und gestreckt → füllt am Computer links/rechts */
-.grow-bg {
-    position: absolute; inset: -40px; width: calc(100% + 80px); height: calc(100% + 80px);
-    filter: blur(28px) saturate(.9); transform: scale(1.05);
+    background: #2e241d;
 }
 .grow-fg { position: absolute; inset: 0; width: 100%; height: 100%; }
 

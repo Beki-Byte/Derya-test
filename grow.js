@@ -1,6 +1,7 @@
 /* =========================================================
    Intro "Wachstum" (Startseite)
-   Das Video liegt als 100 Einzelbilder in intro/ (f001.webp …).
+   Das Video liegt als Einzelbilder vor: intro/ (Hochformat, Handy)
+   und intro-wide/ (Querformat, Computer).
    Beim Scrollen wird das passende Bild auf ein <canvas> gemalt –
    so läuft es vorwärts und rückwärts, auch auf dem iPhone flüssig.
    Dazu: Texte zu den Stationen und Bewertungen in Sprechblasen.
@@ -12,14 +13,17 @@
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { sec.classList.add("is-off"); return; }
 
     /* ---------- Einstellungen ---------- */
-    const FRAMES = 100;                                   // Anzahl Bilder in intro/
-    const SRC = (i) => `intro/f${String(i + 1).padStart(3, "0")}.webp`;
+    // Je Video: Ordner, Bildanzahl, Seitenverhältnis, Zeitpunkte der Texte (data-range / data-range-wide) und Bewertungen
+    const SETS = {
+        tall: { dir: "intro", frames: 100, ratio: 9 / 16, capAttr: "range", reviews: [0.60, 0.93] },
+        wide: { dir: "intro-wide", frames: 120, ratio: 16 / 9, capAttr: "rangeWide", reviews: [0.48, 0.93] }
+    };
     const VIDEO_END = 0.9;                                // bis hierhin läuft das Video, danach steht das letzte Bild
-    const REVIEWS_FROM = 0.60, REVIEWS_TO = 0.93;         // wann die Bewertungen sichtbar sind
+    let SET = null, FRAMES = 0, REVIEWS_FROM = 0, REVIEWS_TO = 0;
 
     const stage = sec.querySelector(".grow-stage");
-    const fg = sec.querySelector(".grow-fg"), bg = sec.querySelector(".grow-bg");
-    const fctx = fg.getContext("2d"), bctx = bg.getContext("2d");
+    const fg = sec.querySelector(".grow-fg");
+    const fctx = fg.getContext("2d");
 
     const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
     const seg = (p, a, b) => clamp((p - a) / (b - a));
@@ -28,22 +32,28 @@
     const r2 = (n) => Math.round(n * 100) / 100;
 
     /* ---------- Bilder laden: erst das erste, dann der Reihe nach ---------- */
-    const imgs = new Array(FRAMES);
-    const ready = new Array(FRAMES).fill(false);
-    function load(i) {
+    let imgs = [], ready = [], loadId = 0;
+    function load(i, id) {
         return new Promise((res) => {
             const im = new Image();
             im.decoding = "async";
-            im.onload = () => { imgs[i] = im; ready[i] = true; res(); if (Math.abs(i - curFrame) < 3) draw(true); };
+            im.onload = () => { if (id !== loadId) return res(); imgs[i] = im; ready[i] = true; res(); if (Math.abs(i - curFrame) < 3) draw(true); };
             im.onerror = res;
-            im.src = SRC(i);
+            im.src = `${SET.dir}/f${String(i + 1).padStart(3, "0")}.webp`;
         });
     }
-    (async () => {
-        await load(0);
-        // in Paketen laden, damit es schnell vorangeht, ohne alles auf einmal anzufragen
-        for (let i = 1; i < FRAMES; i += 6) await Promise.all([0, 1, 2, 3, 4, 5].map((k) => i + k < FRAMES ? load(i + k) : null));
-    })();
+    function useSet(key) {
+        if (SET === SETS[key]) return;
+        SET = SETS[key]; FRAMES = SET.frames; [REVIEWS_FROM, REVIEWS_TO] = SET.reviews;
+        imgs = new Array(FRAMES); ready = new Array(FRAMES).fill(false);
+        const id = ++loadId;
+        caps.forEach((c) => { [c.a, c.b] = (c.el.dataset[SET.capAttr] || c.el.dataset.range).split(" ").map(Number); });
+        (async () => {
+            await load(0, id);
+            // in Paketen laden, damit es schnell vorangeht, ohne alles auf einmal anzufragen
+            for (let i = 1; i < FRAMES && id === loadId; i += 6) await Promise.all([0, 1, 2, 3, 4, 5].map((k) => i + k < FRAMES ? load(i + k, id) : null));
+        })();
+    }
     function nearest(i) {
         for (let d = 0; d < FRAMES; d++) {
             if (i - d >= 0 && ready[i - d]) return i - d;
@@ -58,7 +68,7 @@
         SW = stage.clientWidth || 1; SH = stage.clientHeight || 1;
         DPR = Math.min(window.devicePixelRatio || 1, 2);
         fg.width = Math.round(SW * DPR); fg.height = Math.round(SH * DPR);
-        bg.width = 48; bg.height = Math.round(48 * SH / SW) || 48;
+        useSet(SW / SH >= 1.15 ? "wide" : "tall");
         drawn = -1;
         render(true);
     }
@@ -68,34 +78,15 @@
         drawn = k;
         const im = imgs[k], iw = im.naturalWidth, ih = im.naturalHeight;
         const W = fg.width, H = fg.height;
-        // Hochformat-Bildschirm: Bild füllt alles (leicht beschnitten). Breiter Bildschirm: ganze Höhe, Seiten weich ausblenden.
-        const cover = SW / SH <= iw / ih * 1.25;
-        const s = cover ? Math.max(W / iw, H / ih) : H / ih;
-        const dw = iw * s, dh = ih * s, dx = (W - dw) / 2, dy = (H - dh) / 2;
-        fctx.globalCompositeOperation = "source-over";
+        // Bild füllt immer die ganze Fläche (an den Rändern minimal beschnitten), unten ausgerichtet wegen der Wurzeln
+        const s = Math.max(W / iw, H / ih);
+        const dw = iw * s, dh = ih * s, dx = (W - dw) / 2, dy = (H - dh) * 0.6;
         fctx.clearRect(0, 0, W, H);
         fctx.drawImage(im, dx, dy, dw, dh);
-        if (!cover) {
-            const f = Math.min(120 * DPR, dw * 0.18);
-            fctx.globalCompositeOperation = "destination-out";
-            let g = fctx.createLinearGradient(dx, 0, dx + f, 0);
-            g.addColorStop(0, "rgba(0,0,0,1)"); g.addColorStop(1, "rgba(0,0,0,0)");
-            fctx.fillStyle = g; fctx.fillRect(dx - 2, 0, f + 2, H);
-            g = fctx.createLinearGradient(dx + dw, 0, dx + dw - f, 0);
-            g.addColorStop(0, "rgba(0,0,0,1)"); g.addColorStop(1, "rgba(0,0,0,0)");
-            fctx.fillStyle = g; fctx.fillRect(dx + dw - f, 0, f + 2, H);
-            fctx.globalCompositeOperation = "source-over";
-        }
-        // unscharfer Hintergrund (nur sichtbar, wo das Bild nicht hinreicht)
-        const bs = Math.max(bg.width / iw, bg.height / ih);
-        bctx.drawImage(im, (bg.width - iw * bs) / 2, (bg.height - ih * bs) / 2, iw * bs, ih * bs);
     }
 
     /* ---------- Texte & Bewertungen ---------- */
-    const caps = [...sec.querySelectorAll(".grow-cap")].map((c) => {
-        const [a, b] = c.dataset.range.split(" ").map(Number);
-        return { el: c, a, b };
-    });
+    const caps = [...sec.querySelectorAll(".grow-cap")].map((c) => ({ el: c, a: 0, b: 0 }));
     const reviewBox = sec.querySelector(".grow-reviews");
     let reviews = [];
     const POS = [
