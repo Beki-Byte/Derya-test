@@ -83,12 +83,17 @@
 }
 .grow-skip:hover { background: var(--white); }
 
+@media (max-height: 700px) { .grow-review p { -webkit-line-clamp: 4; } }
+
 /* Schmale Bildschirme: Bewertungen nacheinander unten statt links/rechts */
 @media (max-width: 899px) {
     .grow-review { width: min(340px, calc(100% - 32px)); left: 50% !important; right: auto !important; top: 16px !important; bottom: auto; margin-left: calc(min(340px, 100% - 32px) / -2); }
     .grow-review::after { left: 50% !important; right: auto !important; margin-left: -8px; }
     .grow-skip { left: 12px; bottom: calc(14px + var(--ui, 0px)); }
 }
+
+/* Hero direkt nach dem Intro: füllt den ganzen Bildschirm (auch bei eingeklappter Adressleiste) */
+.grow + .hero { min-height: calc(100vh - var(--header-h, 76px)); min-height: calc(100lvh - var(--header-h, 76px)); }
 
 @media (prefers-reduced-motion: reduce) {
     .grow { display: none; }

@@ -15,7 +15,7 @@
     /* ---------- Einstellungen ---------- */
     // Je Video: Ordner, Bildanzahl, Seitenverhältnis, Zeitpunkte der Texte (data-range / data-range-wide) und Bewertungen
     const SETS = {
-        tall: { dir: "intro", v: 1, frames: 80, ratio: 9 / 16, capAttr: "range", reviews: [0.56, 1.2] },
+        tall: { dir: "intro", v: 2, frames: 80, ratio: 9 / 16, capAttr: "range", reviews: [0.56, 1.2] },
         wide: { dir: "intro-wide", v: 2, frames: 90, ratio: 16 / 9, capAttr: "rangeWide", reviews: [0.45, 1.2] }
     };
     const VIDEO_END = 0.84;                               // bis hierhin läuft das Video, danach bleibt das letzte Bild stehen und der Hero schiebt sich darüber
@@ -105,8 +105,9 @@
     const POS = [
         { cls: "is-left", css: "left:5%;top:10%", origin: "80% 110%" },
         { cls: "is-right", css: "right:5%;top:15%", origin: "20% 110%" },
-        { cls: "is-left", css: "left:7%;top:44%", origin: "80% 110%" },
-        { cls: "is-right", css: "right:7%;top:48%", origin: "20% 110%" }
+        // 3. und 4. erscheinen an derselben Stelle wie 1. und 2. (als zweites Paar) → nie über dem Text unten
+        { cls: "is-left", css: "left:5%;top:10%", origin: "80% 110%" },
+        { cls: "is-right", css: "right:5%;top:15%", origin: "20% 110%" }
     ];
     const short = (s, n) => { s = s.replace(/\s+/g, " ").trim(); if (s.length <= n) return s; const cut = s.slice(0, n), sp = cut.lastIndexOf(" "); return cut.slice(0, sp > n * 0.6 ? sp : n) + "…"; };
     // Bewertungen kommen aus Firestore (script.js gibt alle weiter) – die 4 längsten, keine erfundenen Texte
@@ -161,7 +162,12 @@
             const n = reviews.length, wide = SW >= 900;
             reviews.forEach((el, i) => {
                 let v;
-                if (wide) v = Math.min(seg(p, REVIEWS_FROM + i * 0.03, REVIEWS_FROM + i * 0.03 + 0.02), 1 - seg(p, REVIEWS_TO, REVIEWS_TO + 0.015));
+                if (wide) {
+                    // breit: erst Paar 1 (links+rechts), dann Paar 2 an derselben Stelle; das letzte Paar bleibt
+                    const pairs = Math.ceil(n / 2), k = Math.floor(i / 2), len = (VIDEO_END + 0.06 - REVIEWS_FROM) / pairs;
+                    const a = REVIEWS_FROM + k * len + (i % 2) * 0.02;
+                    v = Math.min(seg(p, a, a + 0.02), k === pairs - 1 ? 1 : 1 - seg(p, REVIEWS_FROM + (k + 1) * len - 0.025, REVIEWS_FROM + (k + 1) * len - 0.005));
+                }
                 else { const len = (0.98 - REVIEWS_FROM) / n, a = REVIEWS_FROM + i * len; v = Math.min(seg(p, a, a + 0.015), i === n - 1 ? 1 : 1 - seg(p, a + len - 0.015, a + len)); }  // Handy: eine nach der anderen, die letzte bleibt
                 el.style.opacity = r2(v);
                 el.style.transform = `scale(${r2(0.85 + 0.15 * back(v))})`;
