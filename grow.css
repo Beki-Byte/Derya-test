@@ -1,10 +1,10 @@
 /* =========================================================
-   Intro-Animation "Wachstum": Samen → Gießkanne → Setzling →
-   Baum (mit Bewertungen) → Wurzeln entwirren sich (Angebote) → Hero
-   Logik in grow.js
+   Intro "Wachstum": Video (als Einzelbilder in intro/) läuft beim
+   Scrollen ab – Samen → Gießen → Setzling → Baum mit Wurzeln.
+   Bewertungen erscheinen in Sprechblasen. Logik in grow.js
    ========================================================= */
 
-.grow { position: relative; height: 620vh; }
+.grow { position: relative; height: 520vh; }
 .no-js .grow, .grow.is-off { display: none; }
 
 .grow-stage {
@@ -12,12 +12,14 @@
     height: calc(100vh - var(--header-h, 76px));
     height: calc(100svh - var(--header-h, 76px));
     overflow: hidden; isolation: isolate;
-    background:
-        radial-gradient(ellipse at 20% 10%, rgba(255, 255, 255, .9), transparent 55%),
-        linear-gradient(160deg, #f8f3eb 0%, #efe4d4 60%, #e8dac6 100%);
+    background: #e9dccb;
 }
-.grow-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.grow-svg .g-draw { stroke-dasharray: 1 1; stroke-dashoffset: 1; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+/* Hintergrund: dasselbe Bild unscharf und gestreckt → füllt am Computer links/rechts */
+.grow-bg {
+    position: absolute; inset: -40px; width: calc(100% + 80px); height: calc(100% + 80px);
+    filter: blur(28px) saturate(.9); transform: scale(1.05);
+}
+.grow-fg { position: absolute; inset: 0; width: 100%; height: 100%; }
 
 /* ---------- Texte ---------- */
 .grow-captions {
@@ -35,7 +37,7 @@
     will-change: opacity, transform;
 }
 
-/* ---------- Sprechblasen (Bewertungen & Angebote) ---------- */
+/* ---------- Bewertungen in Sprechblasen ---------- */
 .grow-reviews { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
 .grow-review {
     position: absolute; width: min(300px, 24vw);
@@ -50,7 +52,7 @@
     transform: rotate(45deg);
 }
 .grow-review.is-left::after { right: 34px; }
-.grow-review.is-right::after { left: 34px; transform: rotate(45deg); }
+.grow-review.is-right::after { left: 34px; }
 .grow-review p {
     font-size: .92rem; line-height: 1.5; color: var(--ink); margin-bottom: 8px;
     display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
@@ -59,36 +61,20 @@
 .grow-review footer strong { color: var(--brown-dark); }
 .grow-review .stars { color: #c8a04a; letter-spacing: 1px; }
 
-.grow-services {
-    list-style: none; position: absolute; left: 50%; bottom: 70px; transform: translateX(-50%);
-    width: min(900px, calc(100% - 24px));
-    display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 10px; z-index: 2;
-}
-.grow-bubble {
-    position: relative; display: inline-flex; align-items: center; gap: 8px;
-    padding: 9px 16px; border-radius: 18px 18px 18px 4px;
-    background: var(--white); border: 1px solid var(--line); box-shadow: var(--shadow-sm);
-    color: var(--brown-dark); font-weight: 600; font-size: .92rem; text-decoration: none; white-space: nowrap;
-    opacity: 0; transform: translateY(14px) scale(.9); visibility: hidden;
-    transition: box-shadow .2s, border-color .2s;
-    will-change: opacity, transform;
-}
-.grow-bubble i { color: var(--taupe); }
-.grow-bubble:hover, .grow-bubble:focus-visible { border-color: var(--taupe); box-shadow: var(--shadow); }
-
 /* ---------- Bedienelemente ---------- */
 .grow-veil { position: absolute; inset: 0; background: #f8f3eb; opacity: 0; pointer-events: none; z-index: 4; }
 
 .grow-hint {
     position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%);
     display: grid; justify-items: center; gap: 8px; z-index: 3;
-    font-size: .78rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+    font-size: .78rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--cream);
+    text-shadow: 0 1px 6px rgba(0, 0, 0, .5);
     pointer-events: none;
 }
-.grow-mouse { position: relative; width: 26px; height: 40px; border-radius: 15px; border: 2px solid rgba(140, 106, 86, .45); }
+.grow-mouse { position: relative; width: 26px; height: 40px; border-radius: 15px; border: 2px solid rgba(250, 246, 240, .8); }
 .grow-mouse::after {
     content: ""; position: absolute; left: 50%; top: 7px; width: 4px; height: 8px; border-radius: 2px;
-    background: var(--brown); transform: translateX(-50%); animation: scrollDot 1.8s var(--ease) infinite;
+    background: var(--cream); transform: translateX(-50%); animation: scrollDot 1.8s var(--ease) infinite;
 }
 
 .grow-skip {
@@ -96,8 +82,7 @@
     display: inline-flex; align-items: center; gap: 7px;
     padding: 8px 14px; border-radius: 999px; cursor: pointer;
     font: 600 .82rem var(--font-body); color: var(--brown-dark);
-    background: rgba(255, 255, 255, .75); border: 1px solid var(--line);
-    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    background: rgba(255, 255, 255, .8); border: 1px solid var(--line);
     transition: background .2s, opacity .3s;
 }
 .grow-skip:hover { background: var(--white); }
@@ -106,9 +91,6 @@
 @media (max-width: 899px) {
     .grow-review { width: min(340px, calc(100% - 32px)); left: 50% !important; right: auto !important; top: auto !important; bottom: 74px; margin-left: calc(min(340px, 100% - 32px) / -2); }
     .grow-review::after { left: 50% !important; right: auto !important; margin-left: -8px; }
-    .grow-services { bottom: 62px; gap: 8px; left: 12px; transform: none; width: calc(100% - 84px); justify-content: flex-start; }
-    .grow-services { gap: 6px; }
-    .grow-bubble { padding: 6px 10px; font-size: .76rem; gap: 6px; }
     .grow-skip { left: 12px; bottom: 14px; }
 }
 
