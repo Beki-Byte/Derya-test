@@ -15,8 +15,8 @@
     /* ---------- Einstellungen ---------- */
     // Je Video: Ordner, Bildanzahl, Seitenverhältnis, Zeitpunkte der Texte (data-range / data-range-wide) und Bewertungen
     const SETS = {
-        tall: { dir: "intro", frames: 80, ratio: 9 / 16, capAttr: "range", reviews: [0.56, 1.2] },
-        wide: { dir: "intro-wide", frames: 90, ratio: 16 / 9, capAttr: "rangeWide", reviews: [0.45, 1.2] }
+        tall: { dir: "intro", v: 1, frames: 80, ratio: 9 / 16, capAttr: "range", reviews: [0.56, 1.2] },
+        wide: { dir: "intro-wide", v: 2, frames: 90, ratio: 16 / 9, capAttr: "rangeWide", reviews: [0.45, 1.2] }
     };
     const VIDEO_END = 0.84;                               // bis hierhin läuft das Video, danach bleibt das letzte Bild stehen und der Hero schiebt sich darüber
     let SET = null, FRAMES = 0, REVIEWS_FROM = 0, REVIEWS_TO = 0;
@@ -43,7 +43,7 @@
             };
             // bei Netzwerkfehler bis zu 2x neu versuchen
             im.onerror = () => { if (tries < 2 && id === loadId) setTimeout(() => load(i, id, tries + 1).then(res), 800); else res(); };
-            im.src = `${SET.dir}/f${String(i + 1).padStart(3, "0")}.webp`;
+            im.src = `${SET.dir}/f${String(i + 1).padStart(3, "0")}.webp?v=${SET.v}`;
         });
     }
     function useSet(key) {
