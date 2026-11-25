@@ -89,6 +89,7 @@
         // Bild füllt immer die ganze Fläche (an den Rändern minimal beschnitten), unten ausgerichtet wegen der Wurzeln
         const s = Math.max(W / iw, H / ih);
         const dw = iw * s, dh = ih * s, dx = (W - dw) / 2, dy = (H - dh) * 0.6;
+        fctx.imageSmoothingEnabled = true; fctx.imageSmoothingQuality = "high";
         fctx.clearRect(0, 0, W, H);
         fctx.drawImage(im, dx, dy, dw, dh);
     }
@@ -98,10 +99,10 @@
     const reviewBox = sec.querySelector(".grow-reviews");
     let reviews = [];
     const POS = [
-        { cls: "is-left", css: "left:5%;top:18%", origin: "80% 110%" },
-        { cls: "is-right", css: "right:5%;top:24%", origin: "20% 110%" },
-        { cls: "is-left", css: "left:7%;top:54%", origin: "80% 110%" },
-        { cls: "is-right", css: "right:7%;top:60%", origin: "20% 110%" }
+        { cls: "is-left", css: "left:5%;top:10%", origin: "80% 110%" },
+        { cls: "is-right", css: "right:5%;top:15%", origin: "20% 110%" },
+        { cls: "is-left", css: "left:7%;top:44%", origin: "80% 110%" },
+        { cls: "is-right", css: "right:7%;top:48%", origin: "20% 110%" }
     ];
     const short = (s, n) => { s = s.replace(/\s+/g, " ").trim(); if (s.length <= n) return s; const cut = s.slice(0, n), sp = cut.lastIndexOf(" "); return cut.slice(0, sp > n * 0.6 ? sp : n) + "…"; };
     // Bewertungen kommen aus dem normalen Bewertungsbereich (Firestore) – keine erfundenen Texte
