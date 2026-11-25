@@ -33,12 +33,16 @@
 
     /* ---------- Bilder laden: erst das erste, dann der Reihe nach ---------- */
     let imgs = [], ready = [], loadId = 0;
-    function load(i, id) {
+    function load(i, id, tries = 0) {
         return new Promise((res) => {
             const im = new Image();
-            im.decoding = "async";
-            im.onload = () => { if (id !== loadId) return res(); imgs[i] = im; ready[i] = true; res(); if (Math.abs(i - curFrame) < 3) draw(true); };
-            im.onerror = res;
+            im.onload = () => {
+                if (id !== loadId) return res();
+                imgs[i] = im; ready[i] = true; res();
+                if (i === curFrame || drawn < 0 || Math.abs(i - curFrame) < Math.abs(drawn - curFrame)) draw(true);
+            };
+            // bei Netzwerkfehler bis zu 2x neu versuchen
+            im.onerror = () => { if (tries < 2 && id === loadId) setTimeout(() => load(i, id, tries + 1).then(res), 800); else res(); };
             im.src = `${SET.dir}/f${String(i + 1).padStart(3, "0")}.webp`;
         });
     }
@@ -51,7 +55,11 @@
         (async () => {
             await load(0, id);
             // in Paketen laden, damit es schnell vorangeht, ohne alles auf einmal anzufragen
-            for (let i = 1; i < FRAMES && id === loadId; i += 6) await Promise.all([0, 1, 2, 3, 4, 5].map((k) => i + k < FRAMES ? load(i + k, id) : null));
+            // erst jedes 4. Bild (grober Ablauf sofort möglich), dann die Lücken füllen
+            const order = [];
+            for (let i = 4; i < FRAMES; i += 4) order.push(i);
+            for (let i = 1; i < FRAMES; i++) if (i % 4) order.push(i);
+            for (let j = 0; j < order.length && id === loadId; j += 8) await Promise.all(order.slice(j, j + 8).map((i) => load(i, id)));
         })();
     }
     function nearest(i) {
