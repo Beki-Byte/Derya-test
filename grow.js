@@ -187,4 +187,22 @@
     }, { passive: true });
     window.addEventListener("resize", measure);
     measure();
+
+    /* ---------- Einrasten: bleibt man kurz nach dem Intro stehen, rutscht der Hero genau unter den Header ---------- */
+    const hero = document.getElementById("home");
+    let stopTimer = 0, snapping = false;
+    window.addEventListener("scroll", () => {
+        clearTimeout(stopTimer);
+        if (snapping) return;
+        stopTimer = setTimeout(() => {
+            if (!hero) return;
+            const headerH = parseFloat(getComputedStyle(stage).top) || 0;
+            const d = hero.getBoundingClientRect().top - headerH;      // >0: Intro schaut oben noch raus, <0: Hero schon etwas drüber
+            const vh = window.innerHeight;
+            if (Math.abs(d) < 3 || d > vh * 0.4 || d < -vh * 0.25) return;
+            snapping = true;
+            window.scrollBy({ top: d, behavior: "smooth" });
+            setTimeout(() => { snapping = false; }, 700);
+        }, 160);
+    }, { passive: true });
 })();
