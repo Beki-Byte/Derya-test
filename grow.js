@@ -15,10 +15,10 @@
     /* ---------- Einstellungen ---------- */
     // Je Video: Ordner, Bildanzahl, Seitenverhältnis, Zeitpunkte der Texte (data-range / data-range-wide) und Bewertungen
     const SETS = {
-        tall: { dir: "intro", frames: 100, ratio: 9 / 16, capAttr: "range", reviews: [0.60, 0.93] },
-        wide: { dir: "intro-wide", frames: 120, ratio: 16 / 9, capAttr: "rangeWide", reviews: [0.48, 0.93] }
+        tall: { dir: "intro", frames: 80, ratio: 9 / 16, capAttr: "range", reviews: [0.56, 1.2] },
+        wide: { dir: "intro-wide", frames: 90, ratio: 16 / 9, capAttr: "rangeWide", reviews: [0.45, 1.2] }
     };
-    const VIDEO_END = 0.9;                                // bis hierhin läuft das Video, danach steht das letzte Bild
+    const VIDEO_END = 0.84;                               // bis hierhin läuft das Video, danach bleibt das letzte Bild stehen und der Hero schiebt sich darüber
     let SET = null, FRAMES = 0, REVIEWS_FROM = 0, REVIEWS_TO = 0;
 
     const stage = sec.querySelector(".grow-stage");
@@ -51,7 +51,11 @@
         SET = SETS[key]; FRAMES = SET.frames; [REVIEWS_FROM, REVIEWS_TO] = SET.reviews;
         imgs = new Array(FRAMES); ready = new Array(FRAMES).fill(false);
         const id = ++loadId;
-        caps.forEach((c) => { [c.a, c.b] = (c.el.dataset[SET.capAttr] || c.el.dataset.range).split(" ").map(Number); });
+        // Zeiten im HTML sind für ein Videoende bei 0.9 angegeben → auf VIDEO_END umrechnen; der letzte Text bleibt bis zum Schluss
+        caps.forEach((c, i) => {
+            const [a, b] = (c.el.dataset[SET.capAttr] || c.el.dataset.range).split(" ").map(Number);
+            c.a = a * VIDEO_END / 0.9; c.b = i === caps.length - 1 ? 2 : b * VIDEO_END / 0.9;
+        });
         (async () => {
             await load(0, id);
             // in Paketen laden, damit es schnell vorangeht, ohne alles auf einmal anzufragen
@@ -105,20 +109,22 @@
         { cls: "is-right", css: "right:7%;top:48%", origin: "20% 110%" }
     ];
     const short = (s, n) => { s = s.replace(/\s+/g, " ").trim(); if (s.length <= n) return s; const cut = s.slice(0, n), sp = cut.lastIndexOf(" "); return cut.slice(0, sp > n * 0.6 ? sp : n) + "…"; };
-    // Bewertungen kommen aus dem normalen Bewertungsbereich (Firestore) – keine erfundenen Texte
+    // Bewertungen kommen aus Firestore (script.js gibt alle weiter) – die 4 längsten, keine erfundenen Texte
     function pullReviews() {
-        const cards = [...document.querySelectorAll("#comments-grid .review-card")].slice(0, 4);
-        if (!cards.length || reviews.length) return;
-        reviews = cards.map((c, i) => {
+        const all = (window.__allComments || []).filter((c) => (c.text || "").trim());
+        if (!all.length || reviews.length) return;
+        const pick = [...all].sort((x, y) => (y.text || "").length - (x.text || "").length).slice(0, 4);
+        reviews = pick.map((c, i) => {
             const pos = POS[i];
             const box = document.createElement("figure");
             box.className = "grow-review " + pos.cls;
             box.style.cssText = pos.css + `;--origin:${pos.origin}`;
             const p = document.createElement("p");
-            p.textContent = "“" + short(c.querySelector("p")?.textContent || "", 150) + "”";
+            p.textContent = "“" + short(c.text, 260) + "”";
             const f = document.createElement("footer");
-            const nm = document.createElement("strong"); nm.textContent = c.querySelector("strong")?.textContent || "";
-            const st = document.createElement("span"); st.className = "stars"; st.textContent = c.querySelector(".stars")?.textContent || "";
+            const nm = document.createElement("strong"); nm.textContent = c.name || "";
+            const n = Math.max(1, Math.min(5, Math.round(Number(c.stars) || 5)));
+            const st = document.createElement("span"); st.className = "stars"; st.textContent = "★".repeat(n) + "☆".repeat(5 - n);
             f.append(nm, st);
             box.append(p, f);
             reviewBox.appendChild(box);
@@ -126,10 +132,10 @@
         });
         render(true);
     }
-    const grid = document.getElementById("comments-grid");
-    if (grid) { new MutationObserver(pullReviews).observe(grid, { childList: true }); pullReviews(); }
+    document.addEventListener("comments-loaded", pullReviews);
+    pullReviews();
 
-    const veil = sec.querySelector(".grow-veil"), hint = sec.querySelector(".grow-hint"), skip = sec.querySelector(".grow-skip");
+    const hint = sec.querySelector(".grow-hint"), skip = sec.querySelector(".grow-skip");
     skip.addEventListener("click", () => document.getElementById("home")?.scrollIntoView({ behavior: "smooth" }));
 
     /* ---------- Ein Bild für Fortschritt p ---------- */
@@ -156,16 +162,15 @@
             reviews.forEach((el, i) => {
                 let v;
                 if (wide) v = Math.min(seg(p, REVIEWS_FROM + i * 0.03, REVIEWS_FROM + i * 0.03 + 0.02), 1 - seg(p, REVIEWS_TO, REVIEWS_TO + 0.015));
-                else { const len = (REVIEWS_TO - REVIEWS_FROM) / n, a = REVIEWS_FROM + i * len; v = Math.min(seg(p, a, a + 0.015), 1 - seg(p, a + len - 0.015, a + len)); }
+                else { const len = (0.98 - REVIEWS_FROM) / n, a = REVIEWS_FROM + i * len; v = Math.min(seg(p, a, a + 0.015), i === n - 1 ? 1 : 1 - seg(p, a + len - 0.015, a + len)); }  // Handy: eine nach der anderen, die letzte bleibt
                 el.style.opacity = r2(v);
                 el.style.transform = `scale(${r2(0.85 + 0.15 * back(v))})`;
             });
         }
 
-        veil.style.opacity = r2(ease(seg(p, 0.95, 1)));
         hint.style.opacity = r2(1 - seg(p, 0, 0.025));
-        skip.style.opacity = r2(1 - seg(p, 0.93, 0.96));
-        skip.style.visibility = p > 0.96 ? "hidden" : "visible";
+        skip.style.opacity = r2(1 - seg(p, VIDEO_END, VIDEO_END + 0.03));
+        skip.style.visibility = p > VIDEO_END + 0.03 ? "hidden" : "visible";
     }
 
     let ticking = false;

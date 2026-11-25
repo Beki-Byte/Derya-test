@@ -36,7 +36,7 @@
 /* ---------- Bewertungen in Sprechblasen ---------- */
 .grow-reviews { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
 .grow-review {
-    position: absolute; width: min(300px, 24vw);
+    position: absolute; width: min(330px, 25vw);
     background: var(--white); border: 1px solid var(--line); border-radius: var(--radius);
     box-shadow: var(--shadow); padding: 14px 16px 12px;
     opacity: 0; transform: scale(.85); transform-origin: var(--origin, 50% 100%);
@@ -51,7 +51,7 @@
 .grow-review.is-right::after { left: 34px; }
 .grow-review p {
     font-size: .92rem; line-height: 1.5; color: var(--ink); margin-bottom: 8px;
-    display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+    display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden;
 }
 .grow-review footer { display: flex; align-items: center; gap: 8px; font-size: .8rem; color: var(--muted); }
 .grow-review footer strong { color: var(--brown-dark); }

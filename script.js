@@ -829,6 +829,9 @@ function drawComments() {
 async function renderComments() {
     commentsCache = await getComments();
     drawComments();
+    // Intro-Animation (grow.js) bekommt alle Bewertungen
+    window.__allComments = commentsCache || [];
+    document.dispatchEvent(new CustomEvent("comments-loaded"));
 }
 
 function initReviews() {
