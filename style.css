@@ -1333,6 +1333,69 @@ html.has-cursor :is(input, textarea, select, .fc) { cursor: auto; }
     .page-veil, .cursor-dot, .cursor-ring, .root-line { display: none !important; }
 }
 
+/* =========================================================
+   Szenen (motion.js / scenes.js)
+   ========================================================= */
+/* Zitat wird getippt */
+.about-quote.is-typing .ch { opacity: 0; }
+.about-quote.is-typing .ch.on { opacity: 1; }
+.type-caret {
+    display: inline-block; width: 2px; height: 1.05em; margin: 0 1px -0.16em; background: var(--clay);
+    animation: caretBlink 1s steps(1) infinite;
+}
+.type-caret.is-done { animation: caretBlink 1s steps(1) 3, caretOut .4s 3s forwards; }
+@keyframes caretBlink { 50% { opacity: 0; } }
+@keyframes caretOut { to { opacity: 0; } }
+
+/* Partikel-Baum im Hero */
+.hero-particles { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+.hero.has-particles h1 { text-shadow: 0 0 40px rgba(242, 236, 227, .9), 0 0 2px rgba(242, 236, 227, .9); }
+.hero.has-particles .hero-quote, .hero.has-particles .hero-sub { text-shadow: 0 0 18px rgba(242, 236, 227, 1), 0 0 2px rgba(242, 236, 227, 1); }
+.hero.has-particles::before { opacity: .06; }
+
+/* Muttersprache: riesiges Laufband */
+.native-lang { overflow: hidden; }
+.lang-band { position: absolute; left: 0; right: 0; top: clamp(18px, 4vw, 50px); pointer-events: none; z-index: 0; }
+.lang-band-row { display: flex; align-items: center; gap: .35em; white-space: nowrap; width: max-content; will-change: transform;
+    font-family: var(--font-display); font-weight: 300; font-style: italic; font-size: clamp(4.5rem, 15vw, 14rem); line-height: 1; letter-spacing: -.04em;
+    color: transparent; -webkit-text-stroke: 1px rgba(156, 107, 78, .28); }
+.lang-band-row i { font-style: normal; font-size: .35em; color: rgba(201, 151, 91, .5); -webkit-text-stroke: 0; }
+.native-lang > .container { position: relative; z-index: 1; padding-top: clamp(80px, 12vw, 190px); }
+
+/* Ablauf: Fortschrittslinie */
+.steps-line { position: absolute; left: 0; right: 0; top: -1px; height: 2px; pointer-events: none; }
+.steps-line span { display: block; height: 100%; background: var(--clay); transform-origin: left; transform: scaleX(0); }
+
+/* Bewertungen: endloses Band */
+.review-band { margin: 0 calc(50% - 50vw) clamp(40px, 6vw, 70px); display: grid; gap: 16px; overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.review-band-row { overflow: hidden; }
+.review-band-track { display: flex; gap: 16px; width: max-content; animation: bandMove var(--dur, 60s) linear infinite; }
+.review-band-row.is-rev .review-band-track { animation-direction: reverse; }
+.review-band:hover .review-band-track { animation-play-state: paused; }
+@keyframes bandMove { to { transform: translateX(-50%); } }
+.review-band-item { width: clamp(260px, 30vw, 380px); flex-shrink: 0; padding: 22px 24px; border-radius: var(--radius); background: rgba(239, 230, 218, .05); border: 1px solid rgba(239, 230, 218, .1); }
+.review-band-item p { font-family: var(--font-display); font-weight: 340; font-size: 1.1rem; line-height: 1.45; color: var(--on-dark); margin-bottom: 12px; }
+.review-band-item figcaption { font-size: .8rem; font-weight: 700; letter-spacing: .04em; color: var(--amber); white-space: pre; }
+
+/* Termin: Licht folgt Maus/Finger */
+.cta-banner { --lx: 50%; --ly: 110%; transition: background-position .3s; }
+.cta-banner::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0; transition: opacity .6s;
+    background: radial-gradient(circle 420px at var(--lx) var(--ly), rgba(230, 199, 155, .35), transparent 70%); }
+.cta-banner.is-lit::after { opacity: 1; }
+
+/* Leistungen: Karten im Laufband auch auf dem Handy */
+@media (max-width: 760px) {
+    .services-grid.is-track { gap: 14px; padding: 0 20px; }
+    .services-grid.is-track .service-card, .services-grid.is-track .service-card--feature { width: 78vw; min-height: 58vh; }
+    .services-progress { margin: 26px 20px 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .about-quote .ch { opacity: 1 !important; }
+    .type-caret, .lang-band, .review-band, .hero-particles { display: none !important; }
+}
+
 /* ---------- Druck ---------- */
 @media print {
     .site-header, .chat-fab, .chat-panel, .to-top, .cookie-card, .site-footer, .page-veil, .root-line, .cursor-dot, .cursor-ring { display: none !important; }

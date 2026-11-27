@@ -8,8 +8,9 @@
     "use strict";
     const html = document.documentElement;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const coarse = window.matchMedia("(pointer: coarse)").matches || !window.matchMedia("(hover: hover)").matches;
-    const tier = reduced ? "low" : (coarse || (navigator.hardwareConcurrency || 4) <= 2 ? "mid" : "high");
+    // „Gibt es irgendeine Maus/ein Trackpad?“ – auch ein Tablet mit Maus zählt als Computer
+    const fine = window.matchMedia("(any-pointer: fine)").matches || window.matchMedia("(any-hover: hover)").matches;
+    const tier = reduced ? "low" : fine ? "high" : "mid";
     html.dataset.tier = tier;
 
     const page = (location.pathname.split("/").pop() || "index.html").replace(".html", "") || "index";
@@ -63,6 +64,21 @@
     if (!hasGsap) { openVeil(); initTransitions(); return; }
     const { gsap, ScrollTrigger } = window;
     gsap.registerPlugin(ScrollTrigger);
+    // CSS-„scroll-behavior: smooth“ stört GSAP beim Neuberechnen (misst dann an falscher Stelle) → aus.
+    // Weiches Springen zu Ankern übernimmt Lenis bzw. der Klick-Handler unten.
+    html.style.scrollBehavior = "auto";
+    document.addEventListener("click", (e) => {
+        if (window.__lenis || e.defaultPrevented) return;
+        const a = e.target.closest('a[href*="#"]');
+        if (!a) return;
+        const url = new URL(a.href, location.href);
+        if (url.pathname !== location.pathname || !url.hash || url.hash === "#") return;
+        const t = document.getElementById(decodeURIComponent(url.hash.slice(1)));
+        if (!t) return;
+        e.preventDefault();
+        t.scrollIntoView({ behavior: reduced ? "auto" : "smooth" });
+        history.replaceState(null, "", url.hash);
+    });
 
     /* ---------- Weiches Scrollen (Computer, Inhaltsseiten) ---------- */
     let lenis = null;
@@ -124,15 +140,29 @@
     // Unterzeile im Hero sanft hinterher
     document.querySelectorAll(".hero .hero-sub, .page-hero p").forEach((el) => gsap.from(el, { opacity: 0, y: 24, duration: 1.2, ease: EASE, delay: 0.7, scrollTrigger: el.closest("#home") ? { trigger: el, start: "top 90%", once: true } : undefined }));
 
-    /* ---------- Zitat färbt sich beim Lesen Wort für Wort ein ---------- */
+    /* ---------- Zitat wird wie live getippt (mit blinkendem Cursor) ---------- */
     document.querySelectorAll(".about-quote").forEach((q) => {
-        const words = q.textContent.trim().split(/\s+/);
+        const text = q.textContent.trim();
         q.textContent = "";
-        const spans = words.map((w, i) => { const s = document.createElement("span"); s.className = "w"; s.textContent = w + (i < words.length - 1 ? " " : ""); q.appendChild(s); return s; });
-        ScrollTrigger.create({
-            trigger: q, start: "top 80%", end: "bottom 45%", scrub: true,
-            onUpdate: (st) => { const n = Math.round(st.progress * spans.length); spans.forEach((s, i) => s.classList.toggle("on", i < n)); }
-        });
+        q.classList.add("is-typing");
+        // Alle Zeichen stehen schon an ihrem Platz (unsichtbar) → nichts springt beim Tippen
+        const chars = [...text].map((c) => { const s = document.createElement("span"); s.className = "ch"; s.textContent = c; q.appendChild(s); return s; });
+        const caret = document.createElement("span"); caret.className = "type-caret"; caret.setAttribute("aria-hidden", "true");
+        q.setAttribute("aria-label", text);
+        const sig = q.parentElement.querySelector(".signature");
+        if (sig) gsap.set(sig, { opacity: 0, y: 12 });
+        let i = 0, started = false;
+        const step = () => {
+            if (i >= chars.length) { caret.classList.add("is-done"); if (sig) gsap.to(sig, { opacity: 1, y: 0, duration: 1, ease: EASE }); return; }
+            chars[i].classList.add("on");
+            chars[i].after(caret);
+            const c = chars[i].textContent; i++;
+            // Menschlicher Rhythmus: kurze Pausen nach Satzzeichen, leichtes Zufallstempo
+            const pause = /[.!?;]/.test(c) ? 260 : /[,:–]/.test(c) ? 120 : 0;
+            setTimeout(step, 9 + Math.random() * 14 + pause * 0.7);
+        };
+        q.prepend(caret);
+        ScrollTrigger.create({ trigger: q, start: "top 78%", once: true, onEnter: () => { if (!started) { started = true; step(); } } });
     });
 
     /* ---------- Porträt öffnet sich wie ein Vorhang ---------- */
@@ -143,7 +173,7 @@
 
     /* ---------- Leistungen: gepinnte horizontale Scroll-Geschichte (Computer) ---------- */
     const grid = document.querySelector("#services .services-grid");
-    if (grid && tier === "high" && window.innerWidth >= 1024) {
+    if (grid) {
         const pin = document.createElement("div");
         pin.className = "services-pin";
         grid.parentNode.insertBefore(pin, grid);
@@ -151,31 +181,33 @@
         grid.classList.add("is-track");
         const bar = document.createElement("div"); bar.className = "services-progress"; bar.innerHTML = "<span></span>";
         pin.appendChild(bar);
-        // Raster aus dem schmalen Container lösen: volle Breite
+        // Raster aus dem schmalen Container lösen: volle Breite.
+        // Äußere Hülle = Bezugspunkt fürs Messen (das festgehaltene Element selbst misst beim Neuberechnen falsch)
         const section = pin.closest(".section");
-        section.appendChild(pin);
+        const stage = document.createElement("div"); stage.className = "services-stage";
+        section.appendChild(stage); stage.appendChild(pin);
         const dist = () => Math.max(0, grid.scrollWidth - window.innerWidth);
         gsap.to(grid, {
             x: () => -dist(), ease: "none",
             scrollTrigger: {
-                trigger: pin, start: () => { const hh = parseFloat(getComputedStyle(html).getPropertyValue("--header-h")) || 76; return `center ${Math.round((window.innerHeight + hh) / 2)}px`; },
-                end: () => "+=" + dist(), pin: true, scrub: 1, invalidateOnRefresh: true,
+                trigger: stage, pin: pin, start: () => { const hh = parseFloat(getComputedStyle(html).getPropertyValue("--header-h")) || 76; return "top " + Math.max(hh + 10, Math.round((window.innerHeight + hh) / 2 - pin.offsetHeight / 2)) + "px"; },
+                end: () => "+=" + dist(), scrub: 1, invalidateOnRefresh: true,
                 onUpdate: (st) => bar.style.setProperty("--p", st.progress.toFixed(3))
             }
         });
         // Karten gleiten nacheinander herein (eigene CSS-Einblendung dafür abschalten)
         [...grid.children].forEach((c) => c.classList.remove("reveal"));
-        gsap.fromTo(grid.children, { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 1.1, ease: EASE, stagger: 0.06, scrollTrigger: { trigger: pin, start: "top 85%", once: true } });
+        gsap.fromTo(grid.children, { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 1.1, ease: EASE, stagger: 0.06, scrollTrigger: { trigger: stage, start: "top 85%", once: true } });
     }
 
-    /* ---------- Preise & Schritte: leichtes Gleiten in der Tiefe ---------- */
-    document.querySelectorAll(".price-card, .step").forEach((el, i) => {
+    /* ---------- Preise: leichtes Gleiten in der Tiefe ---------- */
+    document.querySelectorAll(".price-card").forEach((el, i) => {
         gsap.fromTo(el, { y: 40 + (i % 2) * 30 }, { y: 0, ease: "none", scrollTrigger: { trigger: el, start: "top bottom", end: "top 55%", scrub: 1 } });
     });
 
     /* ---------- Hero: Lichtkugeln folgen der Maus ---------- */
     const hero = document.querySelector(".hero");
-    if (hero && tier === "high") {
+    if (hero) {
         hero.addEventListener("pointermove", (e) => {
             const r = hero.getBoundingClientRect();
             hero.style.setProperty("--mx", ((e.clientX - r.left) / r.width - 0.5).toFixed(3));
@@ -201,17 +233,17 @@
     }
 
     /* ---------- Eigener Mauszeiger & Magnet-Buttons (Computer) ---------- */
-    if (tier === "high") {
+    if (tier === "high") {   // nur wenn eine Maus/ein Trackpad vorhanden ist (auch Tablet mit Maus)
         const dot = document.createElement("div"); dot.className = "cursor-dot is-hidden";
         const ring = document.createElement("div"); ring.className = "cursor-ring is-hidden";
         document.body.append(dot, ring);
-        html.classList.add("has-cursor");
         const dx = gsap.quickTo(dot, "x", { duration: 0.12, ease: "power2.out" }), dy = gsap.quickTo(dot, "y", { duration: 0.12, ease: "power2.out" });
         const rx = gsap.quickTo(ring, "x", { duration: 0.5, ease: EASE }), ry = gsap.quickTo(ring, "y", { duration: 0.5, ease: EASE });
         const LINK = "a, button, summary, label, [role='button'], .service-card, .story-card";
         const FIELD = "input, textarea, select, iframe, .fc";
         window.addEventListener("pointermove", (e) => {
-            if (e.pointerType !== "mouse") return;
+            if (e.pointerType !== "mouse") { if (e.pointerType === "touch") { dot.classList.add("is-hidden"); ring.classList.add("is-hidden"); html.classList.remove("has-cursor"); } return; }
+            html.classList.add("has-cursor");
             dx(e.clientX); dy(e.clientY); rx(e.clientX); ry(e.clientY);
             const t = e.target;
             const onField = !!t.closest?.(FIELD);
@@ -223,6 +255,7 @@
         document.querySelectorAll(".btn, .hbtn, .chat-fab, .footer-social a, .nav-toggle").forEach((el) => {
             const xTo = gsap.quickTo(el, "x", { duration: 0.6, ease: "elastic.out(1, 0.4)" }), yTo = gsap.quickTo(el, "y", { duration: 0.6, ease: "elastic.out(1, 0.4)" });
             el.addEventListener("pointermove", (e) => {
+                if (e.pointerType !== "mouse") return;
                 const r = el.getBoundingClientRect();
                 xTo((e.clientX - r.left - r.width / 2) * 0.25); yTo((e.clientY - r.top - r.height / 2) * 0.35);
             });

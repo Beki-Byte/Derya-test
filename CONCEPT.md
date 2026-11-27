@@ -34,16 +34,19 @@ sanfte Seitenübergänge.
 ## Szenen der Startseite
 | Abschnitt | Szene | Antrieb | Budget | Fallback |
 |---|---|---|---|---|
-| Intro | Baum-Video als Einzelbilder | Scroll | ~10 MB, schrittweise geladen | ausgeblendet bei „Bewegung reduzieren“ |
-| Hero | riesiger Name, Lilien, Lichtkugeln | Zeit + Maus | nur CSS/transform | statisch |
-| Über mich | Zitat färbt sich Wort für Wort | Scroll | Text-Spans | sofort eingefärbt |
-| Leistungen | Karten fahren horizontal durch | Scroll (gepinnt) | transform | Handy/Tablet: normales Raster |
-| Ablauf / Preise | Ebenen gleiten, Zahlen | Scroll | transform/opacity | einfache Einblendung |
-| FAQ, Bewertungen, Termin | dunkle „Tiefe“, Bernstein-Licht | Scroll | Farbe | gleich, ohne Animation |
+| Intro (nur TR) | Baum-Video als Einzelbilder | Scroll | ~10 MB, schrittweise geladen | ausgeblendet bei „Bewegung reduzieren“ |
+| Hero | Logo-Baum aus 4–9 Tsd. leuchtenden Punkten (WebGL), weicht Maus/Finger aus, rieselt beim Scrollen nach unten | Zeit + Maus/Finger + Scroll | 1 Canvas, pausiert außerhalb des Bildes | ohne WebGL: normaler Hero |
+| Über mich | Zitat wird live getippt (blinkender Cursor), Porträt öffnet sich wie ein Vorhang | Scroll startet, dann Zeit | Text-Spans | sofort vollständig |
+| Muttersprache | riesiges „Türkçe & Deutsch“-Laufband | Scroll | transform | ausgeblendet |
+| Leistungen | Karten werden festgehalten und fahren seitlich durch (alle Geräte) | Scroll (gepinnt) | transform | normales Raster |
+| Ablauf | Schritte leuchten nacheinander auf, Linie füllt sich (gepinnt, wenn Platz) | Scroll | transform/opacity | alle sichtbar |
+| Preise | Beträge zählen hoch | Scroll | Text | feste Zahl |
+| Bewertungen | echte Bewertungen als zwei gegenläufige Endlosbänder | Zeit (Pause bei Hover) | CSS-Animation | Raster wie bisher |
+| Termin | warmes Bernstein-Licht folgt Maus/Finger | Maus/Finger | CSS | statisch |
 
 ## Geräte-Stufen (motion.js)
-- **high** (Computer mit Maus): alles
-- **mid** (Touch-Geräte): kein eigener Mauszeiger, keine Magnet-Buttons, kein Pinning, natives Scrollen
+- **high** (irgendeine Maus/Trackpad vorhanden – auch Tablet mit Maus): alles inkl. weichem Scrollen, eigenem Mauszeiger, Magnet-Buttons
+- **mid** (nur Touch): alle Szenen und Pinning, aber natives Scrollen und kein Mauszeiger
 - **low** („Bewegung reduzieren“): keine Animationen, alles sofort sichtbar
 
 Buchung, Portal, Zahlung und Assistent nutzen dasselbe Design, aber ohne
