@@ -3,8 +3,7 @@
 Derya Kılıç arbeitet mit dem Unterbewusstsein. Die Seite erzählt das räumlich:
 oben ist es hell wie das Bewusstsein, beim Scrollen geht es Schicht für Schicht
 „unter die Erde“ – die Startseite wird von Abschnitt zu Abschnitt dunkler, bis man
-bei Bewertungen, Fragen und dem Termin im warmen Erdton ankommt. Eine feine
-Wurzel-Linie am linken Rand wächst mit dem Scrollen mit (Computer).
+bei Bewertungen, Fragen und dem Termin im warmen Erdton ankommt.
 Den Einstieg macht das Baum-Video (Samen → Baum → Wurzeln).
 
 ## Stimmung

@@ -215,23 +215,6 @@
         });
     }
 
-    /* ---------- Wurzel-Linie am Rand (Computer) ---------- */
-    if (tier === "high" && !isApp) {
-        const NS = "http://www.w3.org/2000/svg";
-        const svg = document.createElementNS(NS, "svg");
-        svg.setAttribute("class", "root-line"); svg.setAttribute("aria-hidden", "true");
-        svg.setAttribute("viewBox", "0 0 30 1000"); svg.setAttribute("preserveAspectRatio", "none");
-        const d = ["M15,0 C9,120 22,220 14,340 C7,460 23,560 15,680 C9,790 20,880 15,1000",
-            "M14,300 C20,330 26,350 29,380", "M15,520 C9,550 3,575 1,610", "M15,760 C22,790 26,820 28,860", "M15,900 C9,930 5,960 3,1000"];
-        const paths = d.map((p) => { const el = document.createElementNS(NS, "path"); el.setAttribute("d", p); el.setAttribute("vector-effect", "non-scaling-stroke"); el.setAttribute("pathLength", "1"); el.style.strokeDasharray = "1"; el.style.strokeDashoffset = "1"; svg.appendChild(el); return el; });
-        document.body.appendChild(svg);
-        const starts = [0, 0.3, 0.52, 0.76, 0.9];
-        ScrollTrigger.create({
-            start: 0, end: "max",
-            onUpdate: (st) => paths.forEach((p, i) => { const s = starts[i], k = i === 0 ? st.progress : Math.min(1, Math.max(0, (st.progress - s) / 0.08)); p.style.strokeDashoffset = (1 - k).toFixed(3); })
-        });
-    }
-
     /* ---------- Eigener Mauszeiger & Magnet-Buttons (Computer) ---------- */
     if (tier === "high") {   // nur wenn eine Maus/ein Trackpad vorhanden ist (auch Tablet mit Maus)
         const dot = document.createElement("div"); dot.className = "cursor-dot is-hidden";
