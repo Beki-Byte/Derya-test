@@ -1393,8 +1393,20 @@ html.has-cursor :is(input, textarea, select, .fc) { cursor: auto; }
 
 @media (prefers-reduced-motion: reduce) {
     .about-quote .ch { opacity: 1 !important; }
-    .type-caret, .lang-band, .review-band, .hero-particles { display: none !important; }
+    .type-caret, .lang-band, .review-band, .hero-particles, .flow-canvas { display: none !important; }
 }
+
+/* Punkte-Reise (flow.js): eine Punktwolke hinter dem Inhalt, Abschnitte durchsichtig */
+.flow-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; }
+html.has-flow body { transition: background-color .2s linear; }
+html.has-flow main { position: relative; z-index: 1; }
+html.has-flow .site-footer { position: relative; z-index: 1; }
+html.has-flow :is(.hero, #about, #language, #services, #process, #pricing, #faq, #reviews, .section--tight:has(.cta-banner)) { background: transparent; }
+html.has-flow .hero::before { opacity: .07; }
+html.has-flow .hero h1 { text-shadow: 0 0 40px rgba(242, 236, 227, .9), 0 0 2px rgba(242, 236, 227, .9); }
+html.has-flow .hero :is(.hero-quote, .hero-sub) { text-shadow: 0 0 18px rgba(242, 236, 227, 1), 0 0 2px rgba(242, 236, 227, 1); }
+html.has-flow .cta-banner { background: radial-gradient(ellipse 70% 90% at 50% 110%, rgba(201, 151, 91, .35), transparent 60%), rgba(30, 22, 18, .35); }
+html.has-flow .about-quote { text-shadow: 0 0 14px var(--paper); }
 
 /* ---------- Druck ---------- */
 @media print {

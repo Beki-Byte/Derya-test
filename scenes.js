@@ -259,7 +259,7 @@
         });
     }
 
-    initTree();
+    // Hero-Baum übernimmt jetzt flow.js (Punkte-Reise über die ganze Seite)
     initLangMarquee();
     initSteps();
     initCounters();

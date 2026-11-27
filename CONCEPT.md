@@ -34,7 +34,7 @@ sanfte Seitenübergänge.
 | Abschnitt | Szene | Antrieb | Budget | Fallback |
 |---|---|---|---|---|
 | Intro (nur TR) | Baum-Video als Einzelbilder | Scroll | ~10 MB, schrittweise geladen | ausgeblendet bei „Bewegung reduzieren“ |
-| Hero | Logo-Baum aus 4–9 Tsd. leuchtenden Punkten (WebGL), weicht Maus/Finger aus, rieselt beim Scrollen nach unten | Zeit + Maus/Finger + Scroll | 1 Canvas, pausiert außerhalb des Bildes | ohne WebGL: normaler Hero |
+| Punkte-Reise (ganze Seite) | eine Punktwolke (WebGL, `flow.js`) begleitet beim Scrollen und formt je Abschnitt: Baum → Herz → TR·DE → Spirale → 1 2 3 → € → ? → leuchtender Baum (Termin) → Stern; dazwischen „regnet“ sie nach unten. Hintergrund wandert von Papier zu Erde | Scroll + Maus/Finger | 1 fester Canvas, 3,8–8 Tsd. Punkte | ohne WebGL: normale Abschnitte mit eigenen Farben |
 | Über mich | Zitat wird live getippt (blinkender Cursor), Porträt öffnet sich wie ein Vorhang | Scroll startet, dann Zeit | Text-Spans | sofort vollständig |
 | Muttersprache | riesiges „Türkçe & Deutsch“-Laufband | Scroll | transform | ausgeblendet |
 | Leistungen | Karten werden festgehalten und fahren seitlich durch (alle Geräte) | Scroll (gepinnt) | transform | normales Raster |
